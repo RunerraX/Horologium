@@ -1,0 +1,5 @@
+-- CreateTable
+CREATE TABLE "Games" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "gameId" INTEGER NOT NULL
+);
