@@ -27,13 +27,20 @@ cd horologium
 npm install
 ```
 
-### 3. Dev server
+### 3. make .env file
+```bash
+NEXTAUTH_SECRET=  add BASE64 HEX here
+NEXTAUTH_URL=http://localhost:3000
+
+```
+
+### 4. Dev server
 ```bash
 npx prisma migrate dev
 npm run dev
 ```
 
-### 4. Build for production 
+### 5. Build for production 
 ```bash
 npx prisma migrate deploy
 npm build

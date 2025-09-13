@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import {NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList} from "@/components/ui/navigation-menu.tsx";
+import Link from "next/link";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +30,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+      <NavigationMenu className="w-full bg-background border-b shadow-sm px-6 py-3">
+          <NavigationMenuList className="flex gap-6">
+              <NavigationMenuLink asChild>
+                  <Link href="/home" className="text-sm font-medium hover:text-primary transition">
+                      Home
+                  </Link>
+              </NavigationMenuLink>
+              <NavigationMenuLink asChild>
+                  <Link href="/games" className="text-sm font-medium hover:text-primary transition">
+                      Games
+                  </Link>
+              </NavigationMenuLink>
+          </NavigationMenuList>
+      </NavigationMenu>
+
+      {children}
       </body>
     </html>
   );

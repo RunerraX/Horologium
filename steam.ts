@@ -15,11 +15,12 @@ export class Steam {
   public online: boolean
   public username: string
   public games: number[] = []
+    public ownershipCached = false
 
 
   constructor() {
     this.loggedIn = false;
-    this.steam = new SteamUser({ autoRelogin: false, dataDirectory: "./data", protocol: 1 });
+    this.steam = new SteamUser({ autoRelogin: false, dataDirectory: "./data", protocol: 1, enablePicsCache: true });
     this.online = false
     this.setup()
     this.username = ""
@@ -31,7 +32,7 @@ export class Steam {
       this.loggedIn = false;
     })
 
-    this.steam.on("playingState", (blocked, playingApp) => {
+    this.steam.on("playingState", async (blocked, playingApp) => {
       this.blocked = blocked
 
       // If we're not blocked & we are already playing something
@@ -41,7 +42,7 @@ export class Steam {
 
       console.log(`Playing state changed: ${blocked} (App ID: ${playingApp})`)
 
-      this.play()
+      await this.play()
     })
 
     this.steam.on("refreshToken", async (refreshToken) => {
@@ -62,9 +63,23 @@ export class Steam {
     })
 
 
+    this.steam.on("error", (err) => {
+      console.log(err.name)
+      if (err.name == "NoConnection") {
+        this.loggedIn = false
+        this.steam.logOff()
+
+      }
+    })
+      this.steam.on("ownershipCached", () => {
+          console.log("Ownership cached")
+          this.ownershipCached = true
+      })
+
+
   }
 
-  public async login(username: string, password: string): Promise<any> {
+  public async login(username: string, password?: string): Promise<any> {
     return new Promise(async (resolve, reject) => {
       this.username = username
       const token = await prisma.token.findUnique({
@@ -127,9 +142,32 @@ export class Steam {
 
   }
 
+    public async getGames(): Promise<{ appId: number; name: string }[]> {
+
+        const appIds = this.steam.getOwnedApps();
+
+        // Now filter only games
+        const games: { appId: number; name: string }[] = [];
+        for (const appId of appIds) {
+            const info = this.steam.picsCache.apps[appId];
+            if (info?.appinfo?.common?.type === "game") {
+                games.push({
+                    appId,
+                    name: info.appinfo.common.name,
+                });
+            }
+        }
+
+        return games;
+    }
+
+
+
+
 }
 
 const steam = new Steam();
+
 
 
 app.listen(4000, () => {
@@ -141,6 +179,10 @@ app.post("/steam/login", async (req, res) => {
 
   if (!username || !password) {
     return res.status(400).json({ error: "Missing username or password" });
+  }
+
+  if (steam.loggedIn) {
+      return res.json({ success: true, });
   }
 
   if (!steam.loggedIn) {
@@ -218,3 +260,14 @@ app.post("/steam/games/remove", async (req, res) => {
   res.json({ success: true });
 
 })
+
+app.get("/steam/games/getOwned", async (req, res) => {
+    if(!steam.ownershipCached) {
+        return res.status(401).json({ error: "Ownership is not cached yet." });
+    }
+
+    const games = await steam.getGames()
+
+    res.json(games)
+})
+

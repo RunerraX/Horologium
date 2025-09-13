@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
+import { signIn } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -27,73 +28,79 @@ const twofaSchema = z.object({
 export default function LoginForm() {
     const [step, setStep] = useState<"login" | "2fa">("login")
     const [error, setError] = useState("")
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
 
     const loginForm = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
-        defaultValues: {
-            username: "",
-            password: "",
-        },
+        defaultValues: { username: "", password: "" },
     })
 
     const twofaForm = useForm<z.infer<typeof twofaSchema>>({
         resolver: zodResolver(twofaSchema),
-        defaultValues: {
-            code: "",
-        },
+        defaultValues: { code: "" },
     })
 
     async function onLoginSubmit(values: z.infer<typeof loginSchema>) {
         setUsername(values.username)
         setPassword(values.password)
-        setError("");
+        setError("")
 
-        const res = await fetch("/api/steam/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: values.username, password: values.password }),
-        });
+        const res = await signIn("credentials", {
+            redirect: false,
+            username: values.username,
+            password: values.password,
+        })
 
-        if (res.ok) {
-            const data = await res.json();
-            console.log(data)
-            if (data.require2FA) {
-                setStep("2fa");
+        if (res?.error) {
+            if (res.error.startsWith("2FA_REQUIRED")) {
+                setStep("2fa")
             } else {
-                window.location.href = "/dashboard";
+                setError(res.error)
             }
         } else {
-            setError("Invalid username or password");
+            window.location.href = "/home"
         }
     }
-
 
     async function on2faSubmit(values: z.infer<typeof twofaSchema>) {
-        setError("");
+        setError("")
 
-        const res = await fetch("/api/steam/2fa", {
+        // Verify against Express backend
+        const res = await fetch("http://localhost:4000/steam/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, code: values.code }),
-        });
+            body: JSON.stringify({ code: values.code }),
+        })
 
-        if (res.ok) {
-            window.location.href = "/dashboard";
+        if (!res.ok) {
+            setError("Invalid 2FA code")
+            return
+        }
+
+        // Retry NextAuth signIn after verifying
+        const retry = await signIn("credentials", {
+            redirect: false,
+            username,
+            password,
+        })
+
+        if (retry?.error) {
+            setError(retry.error)
         } else {
-            setError("Invalid 2FA code");
+            window.location.href = "/home"
         }
     }
-
 
     return (
         <div className="h-screen flex items-center justify-center">
             <div className="w-96 rounded-2xl border p-6 shadow">
                 {step === "login" && (
                     <Form {...loginForm}>
-                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                        <form
+                            onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                            className="space-y-4"
+                        >
                             <FormField
                                 control={loginForm.control}
                                 name="username"
@@ -119,14 +126,19 @@ export default function LoginForm() {
                                 )}
                             />
                             {error && <p className="text-red-500">{error}</p>}
-                            <Button type="submit" className="w-full">Login</Button>
+                            <Button type="submit" className="w-full">
+                                Login
+                            </Button>
                         </form>
                     </Form>
                 )}
 
                 {step === "2fa" && (
                     <Form {...twofaForm}>
-                        <form onSubmit={twofaForm.handleSubmit(on2faSubmit)} className="space-y-4">
+                        <form
+                            onSubmit={twofaForm.handleSubmit(on2faSubmit)}
+                            className="space-y-4"
+                        >
                             <FormField
                                 control={twofaForm.control}
                                 name="code"
@@ -140,7 +152,9 @@ export default function LoginForm() {
                                 )}
                             />
                             {error && <p className="text-red-500">{error}</p>}
-                            <Button type="submit" className="w-full">Verify</Button>
+                            <Button type="submit" className="w-full">
+                                Verify
+                            </Button>
                         </form>
                     </Form>
                 )}
