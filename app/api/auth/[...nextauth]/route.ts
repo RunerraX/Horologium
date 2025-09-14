@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-
+import "dotenv/config"
 export const authOptions = {
     providers: [
         CredentialsProvider({
@@ -8,15 +8,16 @@ export const authOptions = {
             credentials: {
                 username: { label: "Username", type: "text" },
                 password: { label: "Password", type: "password" },
-                code: { label: "2FA Code", type: "text", optional: true }
+                code: { label: "2FA Code", type: "text", optional: true },
             },
             async authorize(credentials, req) {
                 if (!credentials?.username || !credentials?.password) {
                     throw new Error("Missing credentials");
                 }
 
+
                 // Call your backend Express API
-                const res = await fetch("http://localhost:4000/steam/login", {
+                const res = await fetch(`http://localhost:${process.env.STEAM_API_PORT}/steam/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -43,7 +44,7 @@ export const authOptions = {
             },
         }),
     ],
-
+    debug: true,
     pages: {
         signIn: "/login",
     },

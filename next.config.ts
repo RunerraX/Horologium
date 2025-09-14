@@ -3,15 +3,15 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/login',
-        permanent: true, // set to true if you want a 308 permanent redirect
-      },
-    ]
-  },
+    async redirects() {
+        return [
+            {
+                source: '/',
+                destination: '/login',
+                permanent: true, // set to true if you want a 308 permanent redirect
+            },
+        ]
+    },
 
   webpack: (config) => {
     config.resolve.alias["./lzma_worker.js"] = path.resolve(

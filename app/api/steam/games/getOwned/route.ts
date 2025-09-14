@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import "dotenv/config"
 
 export async function GET() {
     const session = await getServerSession(authOptions)
@@ -11,7 +12,7 @@ export async function GET() {
         })
     }
 
-    const res = await fetch("http://localhost:4000/steam/games/getOwned", {
+    const res = await fetch(`http://localhost:${process.env.STEAM_API_PORT}/steam/games/getOwned`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",

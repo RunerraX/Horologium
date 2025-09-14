@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const { username, password, code } = await req.json();
 
-    const steamRes = await fetch("http://localhost:4000/steam/login", {
+    const steamRes = await fetch(`http://localhost:${process.env.STEAM_API_PORT}/steam/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

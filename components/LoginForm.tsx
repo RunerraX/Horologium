@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
 import { signIn } from "next-auth/react"
-
+import "dotenv/config"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -67,7 +67,7 @@ export default function LoginForm() {
         setError("")
 
         // Verify against Express backend
-        const res = await fetch("http://localhost:4000/steam/verify", {
+        const res = await fetch(`/api/steam/2fa`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code: values.code }),
@@ -83,6 +83,7 @@ export default function LoginForm() {
             redirect: false,
             username,
             password,
+
         })
 
         if (retry?.error) {

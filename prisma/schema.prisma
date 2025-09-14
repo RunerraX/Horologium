@@ -21,6 +21,6 @@ model Token {
 }
 
 model Games {
-  gameId Int    @id
-  name   String
+  gameId Int     @id
+  name   String?
 }

@@ -1,7 +1,7 @@
 import express from "express";
 import SteamUser from "steam-user";
-import { success } from "zod";
 import prisma from "./lib/prisma.ts";
+import "dotenv/config"
 
 const app = express();
 app.use(express.json());
@@ -16,6 +16,8 @@ export class Steam {
   public username: string
   public games: number[] = []
     public ownershipCached = false
+    public requireGuard = false
+    public stopPlaying = false
 
 
   constructor() {
@@ -41,6 +43,10 @@ export class Steam {
       }
 
       console.log(`Playing state changed: ${blocked} (App ID: ${playingApp})`)
+
+        if (this.stopPlaying) {
+            return;
+        }
 
       await this.play()
     })
@@ -102,6 +108,7 @@ export class Steam {
 
       this.steam.once("steamGuard", (domain, callback) => {
         guardCallback = callback;
+        this.requireGuard = true;
         resolve({ require2FA: true, domain });
       });
 
@@ -161,6 +168,11 @@ export class Steam {
         return games;
     }
 
+    public async stopPlayingGames() {
+      this.stopPlaying = true
+        this.steam.gamesPlayed([]);
+    }
+
 
 
 
@@ -170,8 +182,9 @@ const steam = new Steam();
 
 
 
-app.listen(4000, () => {
-  console.log("Steam server is running on port 4000");
+
+app.listen(process.env.STEAM_API_PORT, () => {
+  console.log(`Steam server is running on port ${process.env.STEAM_API_PORT}`);
 });
 
 app.post("/steam/login", async (req, res) => {
@@ -186,6 +199,10 @@ app.post("/steam/login", async (req, res) => {
   }
 
   if (!steam.loggedIn) {
+      if (steam.requireGuard) {
+          steam.requireGuard = false
+          return res.json({ success: true, });
+      }
     const LoginResult = await steam.login(username, password);
 
     if (LoginResult.require2FA) {
@@ -269,5 +286,17 @@ app.get("/steam/games/getOwned", async (req, res) => {
     const games = await steam.getGames()
 
     res.json(games)
+})
+
+app.post("/steam/games/stop", async (req, res) => {
+    await steam.stopPlayingGames();
+
+    res.json({ success: true });
+})
+
+app.post("/steam/games/start", async (req, res) => {
+    steam.stopPlaying = false;
+    await steam.play()
+    res.json({ success: true });
 })
 

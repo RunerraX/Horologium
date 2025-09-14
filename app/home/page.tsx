@@ -33,7 +33,19 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-lg mx-auto p-6">
+        <Button onClick={async () => {
+            await fetch("/api/steam/games/stop", {
+                method: "POST",
+            })
 
+
+        }}>Stop</Button>
+
+        <Button onClick={ async () => {
+            await fetch("/api/steam/games/start", {
+                method: "POST",
+            })
+        }}>Play</Button>
       <div className="space-y-2">
         {games.map((id) => (
           <Card key={id}>

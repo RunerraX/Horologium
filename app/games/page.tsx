@@ -1,15 +1,14 @@
 import GameCard from "@/components/GameCard"
 import AddGameCard from "@/components/AddGameCard.tsx";
-
+import "dotenv/config"
 
 export default async function GamesPage() {
 
 
-    const res = await fetch(`http://localhost:4000/steam/games/getOwned`, {
+    const res = await fetch(`http://localhost:${process.env.STEAM_API_PORT}/steam/games/getOwned`, {
         cache: "no-store",
     })
     const data = await res.json()
-
     return (
         <>
         <div className="max-w-lg mx-auto p-6">
@@ -20,9 +19,9 @@ export default async function GamesPage() {
 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {data.map((app: { appId: number; name: string }) => (
+            {data.length > 0 ? data.map((app: { appId: number; name: string }) => (
                 <GameCard app={app} key={app.appId} />
-            ))}
+            )): <p>Loading...</p>}
         </div>
         </>
     )

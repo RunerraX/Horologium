@@ -3,6 +3,6 @@
 import prisma from "@/lib/prisma"; // adjust import path
 
 export async function GET() {
-  const games = await prisma.games.findMany();
+  const games = await prisma.games?.findMany();
   return Response.json({ games: games.map((g) => g.gameId) });
 }
