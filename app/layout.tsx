@@ -30,7 +30,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <NavigationMenu className="w-full bg-background border-b shadow-sm px-6 py-3">
+        <div className="flex justify-center">
+      <NavigationMenu className="w-full bg-[oklch(0.1_0_0)] border-b shadow-sm px-6 py-3">
           <NavigationMenuList className="flex gap-6">
               <NavigationMenuLink asChild>
                   <Link href="/home" className="text-sm font-medium hover:text-primary transition">
@@ -44,6 +45,7 @@ export default function RootLayout({
               </NavigationMenuLink>
           </NavigationMenuList>
       </NavigationMenu>
+      </div>
 
       {children}
       </body>

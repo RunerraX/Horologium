@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
         return [
             {
                 source: '/',
-                destination: '/login',
+                destination: '/home',
                 permanent: true, // set to true if you want a 308 permanent redirect
             },
         ]

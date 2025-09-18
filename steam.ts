@@ -70,9 +70,10 @@ export class Steam {
 
 
     this.steam.on("error", (err) => {
-      console.log(err.name)
-      if (err.name == "NoConnection") {
+      
+      if (err?.message == "NoConnection") {
         this.loggedIn = false
+        console.log("No connection, Logging off")
         this.steam.logOff()
 
       }
@@ -179,6 +180,7 @@ export class Steam {
 }
 
 const steam = new Steam();
+steam.login("twin2077")
 
 
 
